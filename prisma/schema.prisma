@@ -14,7 +14,7 @@ datasource db {
 }
 
 enum TaskStatus {
-  TODO
+  TODO // Not completed
   COMPLETED
 }
 
