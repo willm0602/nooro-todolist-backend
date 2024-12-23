@@ -3,6 +3,7 @@ import {Express, Request, Response, Application} from 'express';
 import * as dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import type { TaskStatus } from '@prisma/client';
+import cors from 'cors';
 
 const DEFAULT_PORT_NUM = 8080;
 
@@ -12,41 +13,50 @@ dotenv.config();
 const app: Application = express();
 const port = process.env.PORT || DEFAULT_PORT_NUM;
 
+app.use(express.json());
+
+app.use(cors({
+    origin: 'http://localhost:3000'
+}));
+
 const prisma = new PrismaClient();
 
-app.get('/tasks', (res: Response) => {
-    res.json(prisma.task.findMany())
+app.get('/tasks', (req: Request, res: Response) => {
+    prisma.task.findMany().then((resp) => {
+        res.json(resp);
+        res.status(200);
+    }).catch((err) => {
+        console.error(err);
+        res.status(500);
+    })
 })
 
 app.post('/tasks', (req: Request, res: Response) => {
-    
     type PostBody = {
         title: string,
         color: string,
-        status: TaskStatus
     }
     
-    try{
-        const {
-            title,
-            color,
-            status
-        } = req.body as PostBody;
-        const timestamp = new Date();
-        prisma.task.create({
-            data: {
-                title: title,
-                color: color,
-                status: status,
-                timestamp: timestamp
-            }
-        })
-    } catch{
-        // TODO: add error logging
-        res.status(500);
-    } finally{
+    const {
+        title,
+        color,
+    } = req.body as PostBody;
+    const timestamp = new Date();
+    prisma.task.create({
+        data: {
+            title: title,
+            color: color,
+            status: 'TODO',
+            timestamp: timestamp
+        }
+    }).then((resp) => {
+        res.send(resp);
+        console.log(resp);
         res.status(200);
-    }
+    }).catch((err) => {
+        res.send(err);
+        res.status(500);
+    })
 });
 
 app.put('/tasks/:id', (req: Request, res: Response) => {
