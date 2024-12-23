@@ -31,6 +31,19 @@ app.get('/tasks', (req: Request, res: Response) => {
     })
 })
 
+app.get('/task/:id', (req: Request, res: Response) => {
+    const id = parseInt(req.params.id);
+    prisma.task.findUnique({
+        where: {id}
+    }).then((resp) => {
+        res.send(resp);
+        res.status(200);
+    }).catch((err) => {
+        res.send(err);
+        res.status(500);
+    })
+})
+
 app.post('/tasks', (req: Request, res: Response) => {
     type PostBody = {
         title: string,
@@ -51,7 +64,6 @@ app.post('/tasks', (req: Request, res: Response) => {
         }
     }).then((resp) => {
         res.send(resp);
-        console.log(resp);
         res.status(200);
     }).catch((err) => {
         res.send(err);
@@ -60,37 +72,35 @@ app.post('/tasks', (req: Request, res: Response) => {
 });
 
 app.put('/tasks/:id', (req: Request, res: Response) => {
-    try{
-
-        const newTaskData = req.body();
-        const id = parseInt(req.params.id);
-        prisma.task.update({
-            data: newTaskData,
-            where: {
-                id
-            }
-        });
-    } catch {
-        res.status(500);
-    } finally{
-        res.status(200);
-    }
+    const newTaskData = req.body;
+    const id = parseInt(req.params.id);
+    prisma.task.update({
+        data: newTaskData,
+        where: {
+            id
+        }
+    }).then((resp) => {
+        res.send(resp)
+        res.status(200)
+    }).catch((err) => {
+        console.error(err);
+        res.status(500)
+    })
 });
 
 app.delete('/tasks/:id', (req: Request, res: Response) => {
-    try{
-
-        const id = parseInt(req.params.id);
-        prisma.task.delete({
-            where: {
-                id
-            }
-        });
-    } catch {
-        res.status(500);
-    } finally{
+    const id = parseInt(req.params.id);
+    prisma.task.delete({
+        where: {
+            id
+        }
+    }).then((resp) => {
         res.status(200);
-    }
+        res.send(resp);
+    }).catch((err) => {
+        res.status(500);
+        res.send(err);
+    })
 });
 
 app.listen(port, () => {
